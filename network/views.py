@@ -1,4 +1,5 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
+from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
@@ -35,6 +36,13 @@ def register_user(registration_form):
         return True
 
 
+def main_page(request, msg=""):
+    authorized = False
+    if request.user.is_authenticated():
+        authorized = True
+    return render(request, "Main-page.html", {"authorized": authorized, "msg": msg})
+
+
 def login_page(request, info=""):
     if info == "":
         msg = "Enter your authenticate data"
@@ -51,6 +59,7 @@ def login_page(request, info=""):
             if not user:
                 msg = 'Wrong data'
 
+        return HttpResponseRedirect(reverse('Home', kwargs={'msg': msg}))
         return render(request, "login.html", {"login_form": login_form, "msg": msg})
     else:
         login_form = forms.LoginForm()
@@ -64,7 +73,6 @@ def registration_page(request):
         registration_form = forms.RegistrationForm(request.POST)
         if registration_form.is_valid():
             if register_user(registration_form):
-                msg = "You are successfully registered"
                 return HttpResponseRedirect("login/info=registr_success")
             else:
                 return render(request, "Registration-Page.html",
@@ -73,3 +81,11 @@ def registration_page(request):
         registration_form = forms.RegistrationForm()
 
     return render(request, "Registration-Page.html", {"registration_form": registration_form})
+
+
+def logout_page(request):
+    msg = ""
+    if request.user.is_authenticated():
+        logout(request)
+        msg = "Logged out"
+        return HttpResponseRedirect(reverse('Home', kwargs={'msg': msg}))
