@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
@@ -10,10 +11,19 @@ from network.views.utils.auth_utils import check_login_date, register_user
 
 
 def main_page(request, msg=""):
-    authorized = False
-    if request.user.is_authenticated():
-        authorized = True
-    return render(request, "Main-page.html", {"authorized": authorized, "msg": msg})
+    user = request.user
+    user_info = {}
+    usrpath = "/socnet/userpage/"
+    if user.is_authenticated():
+        usrpath += str(user.id)
+        user_info['authorized'] = user.is_authenticated()
+        user_info['user_page'] = usrpath
+        print usrpath
+    else:
+        if msg == "registered":
+            msg = "Successfully registered"
+
+    return render(request, "Main-page.html", {"user_info": user_info, "msg": msg})
 
 
 def login_page(request, info=""):
@@ -33,7 +43,7 @@ def login_page(request, info=""):
                 msg = 'Wrong data'
 
         return HttpResponseRedirect(reverse('Home', kwargs={'msg': msg}))
-        return render(request, "login.html", {"login_form": login_form, "msg": msg})
+        # return render(request, "login.html", {"login_form": login_form, "msg": msg})
     else:
         login_form = forms.LoginForm()
 
@@ -42,11 +52,14 @@ def login_page(request, info=""):
 
 def registration_page(request):
     msg = ""
+    user = request.user
+    if user.is_authenticated():
+        return HttpResponseRedirect("home/")
     if request.method == "POST":
         registration_form = forms.RegistrationForm(request.POST)
         if registration_form.is_valid():
             if register_user(registration_form):
-                return HttpResponseRedirect("login/info=registr_success")
+                return HttpResponseRedirect("/socnet/home/msg=registr_success")
             else:
                 return render(request, "Registration-Page.html",
                               {"registration_form": registration_form, "msg": msg})
@@ -56,6 +69,7 @@ def registration_page(request):
     return render(request, "Registration-Page.html", {"registration_form": registration_form})
 
 
+@login_required
 def logout_page(request):
     msg = ""
     if request.user.is_authenticated():
