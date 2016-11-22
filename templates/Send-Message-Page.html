@@ -1,0 +1,11 @@
+{% extends 'base-User-Page.html' %}
+
+{% block userpage %}
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="receiver" value={{ receiver }} >
+        <h5>Write your message</h5>
+        <input name="content" type="text">
+        <input type="submit">
+    </form>
+{% endblock %}

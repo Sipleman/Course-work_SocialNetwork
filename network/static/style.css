@@ -1,3 +1,8 @@
-h4{
-    font-size: 14px;
+#msg_border{
+    fill: yellow;
+}
+
+#messages{
+    border: medium solid #f0ad4e;
+    font-size: 100px;
 }

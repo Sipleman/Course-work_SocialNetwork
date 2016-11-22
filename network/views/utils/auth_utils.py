@@ -9,6 +9,7 @@ db = DB()
 def check_login_date(login_form):
     username = login_form["login_name"].value()
     password = login_form["password"].value()
+
     user = authenticate(username=username, password=password)
     if user is not None:
         return user

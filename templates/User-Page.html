@@ -5,6 +5,13 @@
 <div class="col-md-10">
     <div class="col-md-4">
         <img src="{% static "images/default_user_image.png"%}" id="user-image">
+        <div class="col-md-12">
+            <input type="hidden" name = "receiver" value={{ path }}>
+            <a href="/socnet/send_msg/{{ user_info.id }}" class="btn btn-xs" role="button">Send a message</a>
+            {% if not is_friends %}
+            <a href="/socnet/friend_request" class="btn btn-xs" role="button">Send friend request</a>
+            {% endif %}
+        </div>
     </div>
     <div class="col-md-6">
         <h5>{{ user_info.name }}</h5>

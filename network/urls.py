@@ -19,5 +19,7 @@ urlpatterns = [
     url(r'^userpage/(?P<usr_id>.[0-9])', views_app.user_page, name="UserPage"),
     url(r'^error/', views_app.error_page, name="UserPage"),
     url(r'^im/', views_app.mail_page, name="UserMail"),
+    url(r'^send_msg/(?P<user_id>.[0-9])', views_app.send_msg, name="SendMessage"),
+    url(r'^friend_request/', views_app.friend_request, name="FriendRequest")
 
 ]
