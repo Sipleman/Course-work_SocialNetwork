@@ -1,0 +1,23 @@
+{% extends 'base-User-Page.html' %}
+
+{% block userpage %}
+    <div class="col-md-10">
+        <div class="col-md-2">
+        </div>
+        <div class="col-md-8" id="messages">
+            {% for msg in  msgs%}
+                <div class="col-md-12" id="message">
+                    <div class="col-md-4">
+                        <h5>From: {{ msg.from }}</h5>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>From: {{ msg.content }}</h5>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>From: {{ msg.time }}</h5>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

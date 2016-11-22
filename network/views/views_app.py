@@ -32,3 +32,9 @@ def error_page(request):
     user_info = {"authorized": True}
     if request.method == "GET":
         return render(request, "Error-Page.html", {"user_info": user_info, "msg": msg})
+
+
+def mail_page(request):
+    user = request.user
+    if user.is_authenticated():
+        db.get_user_mail()

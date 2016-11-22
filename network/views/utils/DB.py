@@ -13,4 +13,11 @@ class DB(object):
     def insert_new_user(self, registration_info):
         print registration_info
         if self.db.users.insert(registration_info):
-            return True
+            if self.db.messages.insert({"user_id": registration_info["user_id"], "msgs": []}):
+                return True
+            return False
+
+    def get_user_mail(self, user_id):
+        user_object_id = self.db.users.find_one({"user_id": user_id})["_id"]
+        msgs = self.db.messages.find_one({"user_id": user_object_id})["msgs"]
+        return msgs

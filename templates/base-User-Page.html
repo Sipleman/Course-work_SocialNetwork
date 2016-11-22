@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% load static %}
+<link href="{% static 'userpage.css' %}" type="text/css" rel="stylesheet"/>
+
+{%  block usr_content %}
+        <div class="col-md-2" id="toolbar">
+            <div class="btn-group-lg btn-group-vertical">
+                <a href="{{ user_page }}" class="btn btn-default" role="button">My Page</a>
+                <a href="/socnet/friends" class="btn btn-default" role="button">My Friends</a>
+                <a href="/socnet/im" class="btn btn-default" role="button">My Messages</a>
+
+            </div>
+        </div>
+
+{% endblock %}
+
+{% block userpage %}
+{% endblock %}

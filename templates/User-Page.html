@@ -1,26 +1,16 @@
-{% extends 'base.html' %}
-
-<link href="/style.css" type="text/css" rel="stylesheet"/>
-
-{%  block usr_content %}
-    <div class="user_toolbar">
-        <div class="col-md-4" id="toolbar">
-            <div class="btn-group-lg btn-group-vertical">
-                <a href="{{ user_page }}" class="btn btn-default" role="button">My Page</a>
-                <a href="/socnet/friends" class="btn btn-default" role="button">My Friends</a>
-            </div>
-        </div>
-    </div>
-
-{% endblock %}
-
-{% block content %}
-    <h4>{{ user_info.user_id }}</h4>
-{% endblock %}
+{% extends 'base-User-Page.html' %}
+{% load static %}
 
 {% block userpage %}
-    <h5>{{ user_info.name }}</h5>
-    <h5>{{ user_info.lastname }}</h5>
-    <h5>{{ user_info.birthday}}</h5>
-    <h5>{{ user_info.city }}</h5>
+<div class="col-md-10">
+    <div class="col-md-4">
+        <img src="{% static "images/default_user_image.png"%}" id="user-image">
+    </div>
+    <div class="col-md-6">
+        <h5>{{ user_info.name }}</h5>
+        <h5>{{ user_info.lastname }}</h5>
+        <h5>{{ user_info.birthday}}</h5>
+        <h5>{{ user_info.city }}</h5>
+    </div>
+</div>
 {% endblock %}
