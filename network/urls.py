@@ -20,6 +20,15 @@ urlpatterns = [
     url(r'^error/', views_app.error_page, name="UserPage"),
     url(r'^im/', views_app.mail_page, name="UserMail"),
     url(r'^send_msg/(?P<user_id>.[0-9])', views_app.send_msg, name="SendMessage"),
-    url(r'^friend_request/', views_app.friend_request, name="FriendRequest")
+    url(r'^friend_request/', views_app.send_friend_request, name="FriendRequest"),
+    url(r'^friends/', views_app.user_friends, name="Friends"),
+    url(r'^delete_friend/', views_app.delete_friend, name="Delete Friend"),
+
+    url(r'^sent/', views_app.user_sent_msgs, name="Sent msgs"),
+
+    url(r'^requests/', views_app.user_requests, name="Friend requests"),
+
+    url(r'^accept_request/', views_app.accept_request, name="Accept_request"),
+    url(r'^decline_request/', views_app.decline_request, name="Decline_request")
 
 ]

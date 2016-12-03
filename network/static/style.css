@@ -2,7 +2,8 @@
     fill: yellow;
 }
 
-#messages{
+#message{
     border: medium solid #f0ad4e;
-    font-size: 100px;
+    font-size: 10%;
+    border-bottom: thin;
 }

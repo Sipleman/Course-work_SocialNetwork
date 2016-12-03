@@ -6,10 +6,20 @@
     <div class="col-md-4">
         <img src="{% static "images/default_user_image.png"%}" id="user-image">
         <div class="col-md-12">
-            <input type="hidden" name = "receiver" value={{ path }}>
             <a href="/socnet/send_msg/{{ user_info.id }}" class="btn btn-xs" role="button">Send a message</a>
             {% if not is_friends %}
-            <a href="/socnet/friend_request" class="btn btn-xs" role="button">Send friend request</a>
+            <form action="/socnet/friend_request/" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="receiver" id="name" value={{ user_info.id }}>
+                <input type="submit" class="btn btn-xs" content="Send friend request"/>
+            </form>
+            {% endif %}
+            {% if is_friends %}
+                <form action="/socnet/delete_friend/" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="receiver" id="name" value={{ user_info.id }}>
+                <input type="submit" class="btn btn-xs" value="Delete from friends"/>
+            </form>
             {% endif %}
         </div>
     </div>
@@ -18,6 +28,9 @@
         <h5>{{ user_info.lastname }}</h5>
         <h5>{{ user_info.birthday}}</h5>
         <h5>{{ user_info.city }}</h5>
+    </div>
+    <div class="col-md-12">
+
     </div>
 </div>
 {% endblock %}

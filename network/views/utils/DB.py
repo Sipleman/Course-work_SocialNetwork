@@ -9,38 +9,156 @@ class DB(object):
     def __init__(self):
         self.client = MongoClient()
         self.db = self.client.socnet_db
+        ####
+        self.user = None
 
-    def get_user_by_id(self, usr_id):
-        return self.db.users.find_one({"user_id": usr_id})
+    def set_current_user(self, user_id):
+        self.user = self.db.users.find_one({"user_id": str(user_id)})
 
-    def get_user_info_by_object_id(self, object_id):
+    def get_current_user(self):
+        return self.user
+
+    def get_user_path(self):
+        return "/socnet/userpage/" + self.user["user_id"]
+
+    def get_user_friend_object(self):
+        return {"_id": self.user["_id"], "date": datetime.now()}
+
+    def get_user_by_id(self, user_id):
+        user = self.db.users.find_one({"user_id": user_id})
+        print user
+        if user:
+            user["user_path"] = "/socnet/userpage/" + str(user_id)
+        return user
+
+    def get_user_by_object_id(self, object_id):
         user = self.db.users.find_one({"_id": ObjectId(object_id)})
-        return user["name"] + user["lastname"]
+        if user:
+            user["user_path"] = "/socnet/userpage/" + str(user["user_id"])
+        return user
 
     def insert_new_user(self, registration_info):
         print registration_info
         if self.db.users.insert(registration_info):
             if self.db.messages.insert({"user_id": registration_info["user_id"], "msgs": []}):
-                return True
+                user_obj_id = self.get_user_by_id(registration_info["user_id"])["_id"]
+                if self.db.friend_lists.insert({"user_id": user_obj_id, "sent_requests": [], "requests": [], "friends": []}):
+                    return True
             return False
 
-    def get_user_mail(self, user_id):
-        user_object = self.db.users.find_one({"user_id": str(user_id)})
-        msgs = self.db.messages.find_one({"user_id": user_object["_id"]})["msgs"]
+    def get_current_user_mail(self):
+        # user_object = self.db.users.find_one({"user_id": str(user_id)})
+        msgs = self.db.messages.find_one({"user_id": self.user["_id"]})["msgs"]
         for msg in msgs:
-            msg["from"] = self.get_user_info_by_object_id(msg["sender"])
+            user_from = self.get_user_by_object_id(msg["sender"])
+            msg["from"] = user_from["name"] + " " + user_from["lastname"]
+            msg["user_path"] = user_from["user_path"]
         print msgs
         return msgs
 
-    def send_message(self, receiver, content, user_id):
-        user_object_id = self.db.users.find_one({"user_id": str(user_id)})["_id"]
+    def send_message(self, receiver, content):
+        # user_object_id = self.db.users.find_one({"user_id": str(user_id)})["_id"]
         receiver_object_id = self.db.users.find_one({"user_id": receiver})["_id"]
         msg = {
-            "receiver": receiver,
+            "receiver": receiver_object_id,
             "content": content,
-            "sender": user_object_id,
+            "sender": self.user["_id"],
             "date": datetime.now()
         }
         return self.db.messages.update(
             {"user_id": receiver_object_id},
             {"$addToSet": {"msgs": msg}})
+
+    def get_current_user_friends(self):
+        friends_ids = self.db.friend_lists.find_one({"user_id": ObjectId(self.user["_id"])})["friends"]
+        friend_list = []
+        for friend_id in friends_ids:
+            friend = self.db.users.find_one({"_id": ObjectId(friend_id["_id"])})
+            friend["link"] = "/socnet/userpage/" + str(friend["user_id"])
+            friend.pop("_id")
+            friend_list.append(friend)
+        return friend_list
+
+    def get_current_user_requests(self):
+        user_ids = self.db.friend_lists.find_one({"user_id": ObjectId(self.user["_id"])})["requests"]
+        requests = []
+        for user_id in user_ids:
+            request = self.db.users.find_one({"_id": ObjectId(user_id)})
+            request["link"] = "/socnet/userpage/" + str(request["user_id"])
+            request.pop("_id")
+            requests.append(request)
+
+        return requests
+
+    def send_friend_request(self, receiver_id):
+        receiver_object_id = self.get_user_by_id(receiver_id)["_id"]
+        user_request = {"receiver": receiver_object_id}
+        self.db.friend_lists.update(
+            {"user_id": ObjectId(self.user["_id"])},
+            {"$addToSet": {"sent_requests": user_request}}
+        )
+        self.db.friend_lists.update(
+            {"user_id": ObjectId(receiver_object_id)},
+            {"$addToSet": {"requests": ObjectId(self.user["_id"])}}
+        )
+
+    def get_current_user_sent_requests(self):
+        requests = self.db.friend_lists.find_one({"_id": ObjectId(self.user["_id"])})["sent_requests"]
+        return requests
+
+    def accept_friend_request(self, friend_id):
+        friend_object = {"_id": ObjectId(self.get_user_by_id(friend_id)["_id"]), "date": datetime.now()}
+        self.db.friend_lists.update(
+            {"user_id": ObjectId(self.user["_id"])},
+            {"$pull": {"requests": friend_object["_id"]}}
+            )
+        self.db.friend_lists.update(
+            {"user_id": ObjectId(self.user["_id"])},
+            {"$addToSet": {"friends": friend_object}}
+        )
+        self.db.friend_lists.update(
+            {"user_id": ObjectId(friend_object["_id"])},
+            {"$addToSet": {"friends": self.get_user_friend_object()}}
+        )
+
+    def cancel_friend_request(self, friend_id):
+        receiver = self.get_user_by_id(friend_id)["_id"]
+        self.db.friend_lists.update(
+            {"user_id": ObjectId(self.user["_id"])},
+            {"$pull": {"sent_requests": {"sender": ObjectId(receiver)}}}
+        )
+        self.db.friend_lists.update(
+            {"user_id": ObjectId(self.get_user_by_id(friend_id)["_id"])},
+            {"$pull": {"requests": {"sender": ObjectId(receiver)}}},
+        )
+
+    def get_current_user_sent_msgs(self):
+        msgs = list(self.db.messages.aggregate([
+                    {"$match": {}},
+                    {"$group": {"_id": "$msgs.sender", "content":  {"$first": "$msgs.content"}}},
+                    {"$unwind": "$_id"},
+                    {"$unwind": "$content"},
+                    {"$match": {"_id": ObjectId(self.user["_id"])}}
+                    ]))
+        return msgs
+
+    def is_friend(self, friend_id):
+        friends_ids = self.db.friend_lists.find_one({"user_id": ObjectId(self.user["_id"])})["friends"]
+        friend_object_id = self.get_user_by_id(friend_id)["_id"]
+        for friend in friends_ids:
+            if friend["_id"] == friend_object_id:
+                return True
+
+        return False
+
+    def delete_friend(self, friend_id):
+        friend_object_id = self.get_user_by_id(friend_id)["_id"]
+        self.db.friend_lists.update(
+            {"user_id": ObjectId(self.user["_id"])},
+            {"$pull": {"friends": {"_id": ObjectId(friend_object_id)}}}
+        )
+        self.db.friend_lists.update(
+            {"user_id": ObjectId(friend_object_id)},
+            {"$pull": {"friends": {"_id": self.user["_id"]}}}
+        )
+        return True

@@ -1,0 +1,24 @@
+{% extends 'base-User-Page.html' %}
+
+{% block userpage %}
+    <div class="col-md-10">
+        <div class="col-md-2", id="msg_border">
+        </div>
+        <div class="col-md-8" id="friends">
+            {% for friend in  friends %}
+                <div class="col-md-12" id="friend">
+
+                    <div class="col-md-4">
+                        <h5><a href="{{ friend.link }}"> {{ friend.name }} {{ friend.lastname }}</a></h5>
+                    </div>
+{#                    <div class="col-md-4">#}
+{#                        <h5>{{ friend.content }}</h5>#}
+{#                    </div>#}
+{#                    <div class="col-md-4">#}
+{#                        <h5>{{ friend.date }}</h5>#}
+{#                    </div>#}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

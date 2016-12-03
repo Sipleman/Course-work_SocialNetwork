@@ -1,0 +1,34 @@
+{% extends 'base-User-Page.html' %}
+
+{% block userpage %}
+
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    <div class="col-md-8" id="requests">
+        {% for request in requests %}
+            <div class="col-md-8">
+                <div class="col-md-4">
+                    <h5><a href="{{ request.link }}"> {{ request.name }} {{ request.lastname }}</a></h5>
+                </div>
+                <div class="col-md-4">
+                    <form action="/socnet/accept_request/" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="request_id" value="{{ request.user_id }}">
+                        <button type="submit">Add to friends</button>
+                    </form>
+                    <form action="/socnet/decline_request/" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="request_id" value="{{ request.user_id }}">
+                        <button type="submit">Отменить</button>
+                    </form>
+                </div>
+            </div>
+                {% endfor %}
+    </div>
+
+{% endblock %}

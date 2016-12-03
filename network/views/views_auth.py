@@ -4,7 +4,7 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
-
+from views_app import db
 # Create your views here.
 from network import forms
 from network.views.utils.auth_utils import check_login_date, register_user
@@ -16,7 +16,7 @@ def main_page(request, msg=""):
     usrpath = "/socnet/userpage/"
     if user.is_authenticated():
         usrpath += str(user.id)
-        user_info['authorized'] = user.is_authenticated()
+        user_info['authorized'] = True
         user_info['user_page'] = usrpath
         print usrpath
     else:
@@ -37,6 +37,7 @@ def login_page(request, info=""):
         user = check_login_date(login_form)
         if user:
             login(request, user)
+            db.set_current_user(str(user.id))
             msg = "Logged in"
         else:
             if not user:
