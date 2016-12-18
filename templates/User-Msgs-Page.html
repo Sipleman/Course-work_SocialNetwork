@@ -1,11 +1,14 @@
 {% extends 'base-User-Page.html' %}
 
 {% block userpage %}
-    <h5><a href="/socnet/sent">Sent msgs</a></h5>
-    <div class="col-md-10">
+    <div class="col-md-9">
+
         <div class="col-md-2", id="msg_border">
+
         </div>
         <div class="col-md-8" id="messages">
+            <h5><a href="/socnet/sent">Sent msgs</a></h5>
+
             {% for msg in  msgs%}
                 <div class="col-md-12" id="message">
                     <div class="col-md-4">

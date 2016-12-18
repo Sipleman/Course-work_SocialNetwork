@@ -1,9 +1,17 @@
+import datetime
+import json
+
+from bson import ObjectId
+from bson import json_util
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.contrib import messages
 
+from network import myutils
 from network.views.utils.DB import DB
+import time
 
 db = DB()
 
@@ -19,8 +27,6 @@ def user_test(user):
 
 @user_passes_test(user_test)
 def user_page(request, usr_id=""):
-
-    print usr_id
     path = "/socnet/userpage/"
     user_info = {"authorized": True}
     is_friends = False
@@ -44,9 +50,10 @@ def user_page(request, usr_id=""):
                     is_friends = True
 
                 user_info["id"] = usr_id
-                print "adsasda"
             else:
                 return render(request, "Error-Page.html", {"user_info": user_info, "msg": "User doesn't exist"})
+            user_info["wall"] = db.get_user_wall_by_id(usr_id)
+
     user_info["path_to_page"] = path
     return render(request, "User-Page.html", {"user_info": user_info, "is_friends": is_friends})
 
@@ -96,7 +103,6 @@ def user_friends(request):
 @user_passes_test(user_test)
 def send_friend_request(request):
     if request.method == "POST":
-        print request.POST["receiver"]
         db.send_friend_request(request.POST["receiver"])
         return HttpResponseRedirect("/socnet/friends/")
 
@@ -136,9 +142,56 @@ def delete_friend(request):
 
 @user_passes_test(user_test)
 def user_sent_msgs(request):
-    user = request.user
     user_info = {"authorized": True, "user_page": db.get_user_path()}
-    print user_info
     if request.method == "GET":
         msgs = db.get_current_user_sent_msgs()
         return render(request, "User-Sent-Mail.html", {"msgs": msgs, "user_info": user_info})
+
+
+@user_passes_test(user_test)
+def new_wall_record(request):
+    user = request.user
+    if request.method == "POST":
+        content = request.POST["msg_content"]
+        date = datetime.datetime.now()
+        sender = db.get_user_by_id(user.id)
+        sender_info = sender["name"] + sender["lastname"]
+        response_data = {"content": content, "date": datetime.datetime.now(), "from": sender, "_id": ObjectId(), "likes": 0}
+
+        print type(datetime.datetime.now())
+        
+        db.send_wall_msg(sender["_id"], user.id, response_data)
+
+        return HttpResponse(
+            myutils.JSONEncoder().encode(response_data),
+            content_type="application/json"
+        )
+
+
+@user_passes_test(user_test)
+def new_like(request):
+    if request.method == "POST":
+        user_id = request.POST["receiver_id"]
+        post_id = request.POST["record_id"]
+        print post_id
+        db.increase_like(user_id, post_id)
+        response_data = {"success": True}
+        return HttpResponse(
+            myutils.JSONEncoder().encode(response_data),
+            content_type="application/json"
+        )
+
+
+@user_passes_test(user_test)
+def new_comment(request):
+    if request.method == "POST":
+        user_id = request.POST["receiver_id"]
+        print user_id
+        post_id = request.POST["post_id"]
+        content = request.POST["content"]
+        response_data = {"success": True, "content": content, "receiver": user_id, "sender": request.user.id}
+        db.insert_new_comment(response_data)
+        return HttpResponse(
+            myutils.JSONEncoder().encode(response_data),
+            content_type="application/json"
+        )

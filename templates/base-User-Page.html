@@ -4,9 +4,11 @@
 <link href="{% static 'userpage.css' %}" type="text/css" rel="stylesheet"/>
 
 {%  block usr_content %}
+
+        <div class="col-md-1"></div>
         <div class="col-md-2" id="toolbar">
             <div class="btn-group-lg btn-group-vertical">
-                <a href="{{ user_info.user_page}}" class="btn btn-default" role="button">My Page</a>
+                <a href="{{ user_info.user_page}}" class="btn btn-default" role="button">My Page<span class="badge">5</span></a>
                 <a href="/socnet/friends" class="btn btn-default" role="button">My Friends</a>
                 <a href="/socnet/im" class="btn btn-default" role="button">My Messages</a>
                 <a href="/socnet/requests" class="btn btn-default" role="button">My Friend Requests</a>

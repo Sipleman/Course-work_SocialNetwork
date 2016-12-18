@@ -7,3 +7,18 @@
     font-size: 10%;
     border-bottom: thin;
 }
+
+#post_input{
+    padding-left: 30px;
+
+}
+#post_form{
+    padding-left: 30px;
+}
+#wall_record{
+    word-wrap: break-word;
+}
+
+.comment{
+    display: none;
+}

@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block userpage %}
-<div class="col-md-10">
+<div class="col-md-8">
     <div class="col-md-4">
         <img src="{% static "images/default_user_image.png"%}" id="user-image">
         <div class="col-md-12">
@@ -11,7 +11,7 @@
             <form action="/socnet/friend_request/" method="POST">
                 {% csrf_token %}
                 <input type="hidden" name="receiver" id="name" value={{ user_info.id }}>
-                <input type="submit" class="btn btn-xs" content="Send friend request"/>
+                <input type="submit" class="btn btn-xs" content="Send friend request" value="Add to friends"/>
             </form>
             {% endif %}
             {% if is_friends %}
@@ -31,6 +31,295 @@
     </div>
     <div class="col-md-12">
 
+            <form action="/socnet/new_record/" method="POST" id="post_input">
+                    {% csrf_token %}
+                        <textarea name="wall_text" id="wall_msg" onkeypress="addNewRecord(event)">
+                        </textarea>
+            </form>
+            <div class="col-md-12" id="wall">
+                {% for wall_record in user_info.wall %}
+                    <div class="col-md-12" >
+                    <div class="media" id="wall_record">
+                        <input type="hidden" id="record_id" value={{ wall_record.id }} >
+                        <div class="media-left"></div>
+                        <div class="media-body">
+                            <h4 class="media-heading">
+                                <small>
+                                    <i>Posted on
+                                        {{ wall_record.date }}
+                                    </i>
+                                </small>
+                            </h4>
+                            <p>
+                                {{ wall_record.content }}
+                            </p>
+                            <button class="btn btn-info btn-xs" id="clickLike" onclick="addNewLike(event)">
+                                <span class="glyphicon glyphicon-thumbs-up" id="newLike" onclick="addNewLike(event)">{{ wall_record.likes }}</span>
+                            </button>
+                            <a href="" class="btn btn-info btn-xs" id="commentButton" onclick="showComments(event)">
+                                <span class="glyphicon glyphicon-comment"></span>
+                                <div class="comment">asd</div>
+                            </a>
+                            <a href="" class="btn btn-info btn-xs">
+                                <span class="glyphicon glyphicon-remove-circle"></span>
+                            </a>
+                        </div>
+                        {% for comment in wall_record.comments %}
+                                <div class="media">
+                                    <div class="comment">
+                                        <div class="media-left"></div>
+                                        <div class="media-body">
+
+                                        </div>
+                                        <h4 class="media-heading">
+
+                                            <small>
+                                                <i> Posted on
+                                                    {{ comment.date }}
+                                                </i>
+                                            </small>
+                                        </h4>
+                                        <p>
+                                            {{  comment.content }}
+                                        </p>
+                                    </div>
+                                </div>
+                        {% endfor %}
+                        <div class="comment">
+                            <textarea name="comment_msg" id="comment_msg" onkeypress="addNewComment(event)">
+                            </textarea>
+                        </div>
+                    </div>
+                    </div>
+                {% endfor %}
+
+        </div>
     </div>
 </div>
+    <script>
+            $('document').ready(function(){
+                $(".comment").hide()
+            })
+            function addNewComment(event){
+                if(event.keyCode == 13) {
+                    event.preventDefault();
+                    csrfSafeMethod(addComment(event.target));
+                }
+            }
+            function addComment(target){
+                    $.ajax({
+
+                    url : "wall/new_comment", // the endpoint
+                    type : "POST", // http method
+                    data : { receiver_id: window.location.pathname.split( '/' )[3],
+                        "content": target.value, "post_id": target.parentElement.parentElement.children[0].value }, // data sent with the post request
+
+                    // handle a successful response
+
+                    success : function(json) {
+                        if (json["success"]){
+                            comment_text = '<div>' + json["content"] + '</div>'
+                            from = json["from"]
+                            when = json["date"]
+                            comments = $(target.parentElement.parentElement.children[3])
+                            comments.append(comment_text)
+                        }
+                        else{
+                            target.value -=1;
+                        }
+                    },
+
+                    // handle a non-successful response
+                    error : function(xhr,errmsg, err) {
+                        $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                            " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                        console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                    }
+                });
+            }
+            function showComments(event) {
+                event.preventDefault();
+                var comments = $(event.target.parentElement.parentElement.parentElement.children[3]);
+                var input_field = $(event.target.parentElement.parentElement.parentElement.children[4])
+                if(comments!==undefined && input_field!==undefined) {
+                    if (!comments.is(":visible")) {
+                        comments.show();
+                        input_field.show();
+                    }
+                    else {
+                        comments.hide();
+                        input_field.hide();
+                    }
+                }
+            }
+            function addNewLike(event){
+                console.log(event.target)
+                event.stopPropagation();
+                event.preventDefault();
+
+                if(event.target.id == "newLike") {
+                    csrfSafeMethod(addLike(event.target))
+                }
+                else {
+                    if (event.target.id == "clickLike") {
+                        csrfSafeMethod(addLike2(event.target))
+                    }
+                }
+            }
+            function addLike2(target){
+                console.log("create post is working!") // sanity check
+                $.ajax({
+
+                    url : "wall/new_like", // the endpoint
+                    type : "POST", // http method
+                    data : { receiver_id: window.location.pathname.split( '/' )[3],
+                        "record_id": target.parentElement.parentElement.children[0].value}, // data sent with the post request
+
+                    // handle a successful response
+
+                    success : function(json) {
+                        if (json["success"]){
+                            target.children[0].innerText = parseInt(target.children[0].innerText) + 1;
+                        }
+                        else{
+                            target.value -=1;
+                        }
+                    },
+
+                    // handle a non-successful response
+                    error : function(xhr,errmsg, err) {
+                        $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                            " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                        console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                    }
+                });
+            };
+
+            function addLike(target){
+                console.log("create post is working!") // sanity check
+                $.ajax({
+
+                    url : "wall/new_like", // the endpoint
+                    type : "POST", // http method
+                    data : { receiver_id: window.location.pathname.split( '/' )[3],
+                        "record_id": target.parentElement.parentElement.parentElement.children[0].value}, // data sent with the post request
+
+                    // handle a successful response
+
+                    success : function(json) {
+                        if (json["success"]){
+                            target.innerText = parseInt(target.innerText) + 1;
+                        }
+                        else{
+                            target.value -=1;
+                        }
+                    },
+
+                    // handle a non-successful response
+                    error : function(xhr,errmsg, err) {
+                        $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                            " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                        console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                    }
+                });
+            };
+
+            function addNewRecord(event){
+                if(event.keyCode == 13) {
+                    event.preventDefault()
+                    console.log($('#wall_msg').val())
+                    csrfSafeMethod(create_post())
+                }
+
+            }
+    {#        $('#add_song').on('submit', function(event){#}
+    {#            event.preventDefault()#}
+    {#            window.alert('asd')#}
+    {#            console.log($('#album').val())#}
+    {#            csrfSafeMethod(create_post())#}
+    {#        })#}
+            function create_post() {
+                console.log("create post is working!") // sanity check
+                $.ajax({
+
+                    url : "wall/new_record", // the endpoint
+                    type : "POST", // http method
+                    data : { msg_content : $('#wall_msg').val(), receiver_id: window.location.pathname.split( '/' )[2]}, // data sent with the post request
+
+                    // handle a successful response
+
+                    success : function(json) {
+                        var text = ""
+                        var record_date = json["date"]
+                        var s = json["_id"];
+                        s = json["content"];
+                        wall_record = '<div class="col-md-12" >\
+                    <div class="media" id="wall_record">\
+                        <div class="media-left"></div>\
+                        <div class="media-body">\
+                        <h4 class="media-heading">\
+                            <small>\
+                                <i>Posted on '
+                                        + record_date +
+                                '</i>\
+                            </small>\
+                        </h4>\
+                        <input type="hidden" id="record_id" value=' + json["_id"] +  '>\
+                        <p>' + json["content"] +
+                        '</p>\
+                        <button class="btn btn-info btn-xs" id="clickLike" onclick="addNewLike(event)">\
+                            <span class="glyphicon glyphicon-thumbs-up" id="newLike" onclick="addNewLike(event)">';
+                        wall_record +=json["likes"] +'</span>\
+                        </button>\
+                        <a href="" class="btn btn-info btn-xs">\
+                            <span class="glyphicon glyphicon-comment"></span>\
+                        </a>\
+                        <a href="" class="btn btn-info btn-xs">\
+                            <span class="glyphicon glyphicon-remove-circle"></span>\
+                        </a>\
+                        </div>\
+                    </div>\
+                    </div>';
+                        console.log(wall_record)
+                        $("#wall")[0].innerHTML += wall_record
+                        $("#wall_msg")[0].value = ""
+                        console.log(json); // log the returned json to the console
+                        console.log("success"); // another sanity check
+                    },
+
+                    // handle a non-successful response
+                    error : function(xhr,errmsg, err) {
+                        $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                            " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                        console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                    }
+                });
+            };
+            function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/request_remove/.test(method));
+                }
+                $.ajaxSetup({
+                    beforeSend: function(xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                        }
+                    }
+            });
+            function getCookie(name) {
+                var cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var cookie = jQuery.trim(cookies[i]);
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+        </script>
 {% endblock %}

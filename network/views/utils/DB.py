@@ -25,7 +25,7 @@ class DB(object):
         return {"_id": self.user["_id"], "date": datetime.now()}
 
     def get_user_by_id(self, user_id):
-        user = self.db.users.find_one({"user_id": user_id})
+        user = self.db.users.find_one({"user_id": str(user_id)})
         print user
         if user:
             user["user_path"] = "/socnet/userpage/" + str(user_id)
@@ -40,14 +40,16 @@ class DB(object):
     def insert_new_user(self, registration_info):
         print registration_info
         if self.db.users.insert(registration_info):
-            if self.db.messages.insert({"user_id": registration_info["user_id"], "msgs": []}):
-                user_obj_id = self.get_user_by_id(registration_info["user_id"])["_id"]
+            user_obj_id = self.get_user_by_id(registration_info["user_id"])["_id"]
+            if self.db.messages.insert({"user_id": user_obj_id, "msgs": []}):
                 if self.db.friend_lists.insert({"user_id": user_obj_id, "sent_requests": [], "requests": [], "friends": []}):
+                    self.db.wall_records.insert({"user_id": user_obj_id, "wall": []})
                     return True
             return False
 
     def get_current_user_mail(self):
         # user_object = self.db.users.find_one({"user_id": str(user_id)})
+        print self.user["_id"]
         msgs = self.db.messages.find_one({"user_id": self.user["_id"]})["msgs"]
         for msg in msgs:
             user_from = self.get_user_by_object_id(msg["sender"])
@@ -162,3 +164,30 @@ class DB(object):
             {"$pull": {"friends": {"_id": self.user["_id"]}}}
         )
         return True
+
+    def get_user_wall_by_id(self, user_id):
+        user_obj_id = self.get_user_by_id(user_id)["_id"]
+        result = self.db.wall_records.find_one({"user_id": ObjectId(user_obj_id)})
+        print result
+        if result and "wall" in result:
+            for record in result["wall"]:
+                record["date"] = str(record["date"])
+            return result["wall"]
+
+        return {}
+
+    def send_wall_msg(self, sender_obj_id, receiver_id, content):
+        receiver = self.get_user_by_id(receiver_id)
+
+        wall_record = {"sender": sender_obj_id, "receiver": receiver["_id"], "content": content["content"],
+                       "id": content["_id"], "date": content["date"], "comments": [], "likes": 0}
+        self.db.wall_records.update(
+            {"user_id": ObjectId(receiver["_id"])},
+            {"$addToSet": {"wall": wall_record}}
+        )
+
+    def increase_like(self, user_id, post_id):
+        user_obj_id = self.get_user_by_id(user_id)["_id"]
+
+    def insert_new_comment(self, response_data):
+        user_obj_id = self.get_user_by_id(response_data["receiver"])

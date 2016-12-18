@@ -17,6 +17,10 @@ urlpatterns = [
 
     # App urls
     url(r'^userpage/(?P<usr_id>.[0-9])', views_app.user_page, name="UserPage"),
+    url(r'^userpage/wall/new_record', views_app.new_wall_record, name="NewWallRecord"),
+    url(r'^userpage/wall/new_like', views_app.new_like, name="AddLike"),
+    url(r'^userpage/wall/new_comment', views_app.new_comment, name="AddComment"),
+
     url(r'^error/', views_app.error_page, name="UserPage"),
     url(r'^im/', views_app.mail_page, name="UserMail"),
     url(r'^send_msg/(?P<user_id>.[0-9])', views_app.send_msg, name="SendMessage"),
