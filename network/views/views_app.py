@@ -189,8 +189,29 @@ def new_comment(request):
         print user_id
         post_id = request.POST["post_id"]
         content = request.POST["content"]
-        response_data = {"success": True, "content": content, "receiver": user_id, "sender": request.user.id}
+        response_data = {"success": True, "content": content, "receiver": user_id, "sender": request.user.id,
+                         "post_id": request.POST["post_id"]}
         db.insert_new_comment(response_data)
+        return HttpResponse(
+            myutils.JSONEncoder().encode(response_data),
+            content_type="application/json"
+        )
+
+
+@user_passes_test(user_test)
+def delete_post(request):
+    if request.method == "POST":
+        receiver_id = request.POST["receiver_id"]
+        post_id = request.POST["post_id"]
+        print post_id
+        sender_id = str(request.user.id)
+        if sender_id == receiver_id:
+            response_data = {"success": True, "receiver": receiver_id, "sender": sender_id,
+                             "post_id": post_id}
+            db.delete_post(response_data)
+        else:
+            response_data = {"success": False}
+
         return HttpResponse(
             myutils.JSONEncoder().encode(response_data),
             content_type="application/json"

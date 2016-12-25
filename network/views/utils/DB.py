@@ -172,6 +172,7 @@ class DB(object):
         if result and "wall" in result:
             for record in result["wall"]:
                 record["date"] = str(record["date"])
+                print record["comments"]
             return result["wall"]
 
         return {}
@@ -191,3 +192,16 @@ class DB(object):
 
     def insert_new_comment(self, response_data):
         user_obj_id = self.get_user_by_id(response_data["receiver"])
+        sender_id = self.get_user_by_id(response_data["sender"])
+        comment = {"content": response_data["content"], "sender": sender_id, "date": datetime.now()}
+        self.db.wall_records.update(
+            {"user_id": ObjectId(user_obj_id["_id"]), "wall.id": ObjectId(response_data["post_id"])},
+            {"$push": {"wall.$.comments": comment}}
+        )
+
+    def delete_post(self, response_data):
+        user_obj_id = self.get_user_by_id(response_data["receiver"])
+        self.db.wall_records.update(
+            {"user_id": ObjectId(user_obj_id["_id"]), "wall.id": ObjectId(response_data["post_id"])},
+            {"$pull": {"wall": {"id": ObjectId(response_data["post_id"])}}}
+        )

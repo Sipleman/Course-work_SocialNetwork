@@ -58,9 +58,8 @@
                             </button>
                             <a href="" class="btn btn-info btn-xs" id="commentButton" onclick="showComments(event)">
                                 <span class="glyphicon glyphicon-comment"></span>
-                                <div class="comment">asd</div>
                             </a>
-                            <a href="" class="btn btn-info btn-xs">
+                            <a href="" class="btn btn-info btn-xs" onclick="deletePost(event)">
                                 <span class="glyphicon glyphicon-remove-circle"></span>
                             </a>
                         </div>
@@ -69,7 +68,7 @@
                                     <div class="comment">
                                         <div class="media-left"></div>
                                         <div class="media-body">
-
+                                            {{ comment.content }}
                                         </div>
                                         <h4 class="media-heading">
 
@@ -97,15 +96,17 @@
     </div>
 </div>
     <script>
-            $('document').ready(function(){
-                $(".comment").hide()
-            })
+
+        $('document').ready(function(){
+            $(".comment").hide()
+        })
             function addNewComment(event){
                 if(event.keyCode == 13) {
                     event.preventDefault();
                     csrfSafeMethod(addComment(event.target));
                 }
             }
+
             function addComment(target){
                     $.ajax({
 
